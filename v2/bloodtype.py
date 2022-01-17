@@ -176,8 +176,8 @@ class BloodType:
         else:
             return '-'
 
-    def setFitness(self, fitness):
-        self.fitness = fitness
+    def set_fitness(self, fitness):
+        self.fitness = pd.Series(fitness)
 
     def set_timesteps(self, timesteptype):
         self.timesteptype = timesteptype
@@ -305,9 +305,7 @@ class BloodType:
         # reduce number of mutations to the proper size of births
         mutations = self.births if self.births < mutations else mutations
 
-        # print(self.births, mutations)
-
-        parents = self.chose_parents(self.births)
+        parents = self.choose_parents(self.births)
 
         children = [None]*self.births
 
@@ -326,6 +324,8 @@ class BloodType:
 
         children = [child for child in children if child is not None]
         self.births = len(children)
+        if self.births == 0:
+            ipdb.set_trace()
         try:
             children = pd.DataFrame(data=children, columns=df_cols)
         except Exception:
@@ -333,13 +333,13 @@ class BloodType:
         self.add_persons(children)
 
     def gen_offspring(self, pid1, pid2):
-        try:
-            child_bt_gt = self.population['bt_gt'][pid1][random.getrandbits(1)] + \
-                self.population['bt_gt'][pid2][random.getrandbits(1)]
-            child_rf_gt = self.population['rf_gt'][pid1][random.getrandbits(1)] + \
-                self.population['rf_gt'][pid2][random.getrandbits(1)]
-        except Exception:
-            ipdb.set_trace()
+        # try:
+        child_bt_gt = self.population['bt_gt'][pid1][random.getrandbits(1)] + \
+            self.population['bt_gt'][pid2][random.getrandbits(1)]
+        child_rf_gt = self.population['rf_gt'][pid1][random.getrandbits(1)] + \
+            self.population['rf_gt'][pid2][random.getrandbits(1)]
+        # except Exception:
+        #     ipdb.set_trace()
 
         child = self.gen_person(age=0.0,
                                 sex=None,
@@ -358,13 +358,15 @@ class BloodType:
 
         # ipdb.set_trace()
         if bt_gtMutation is not None:
-            child['bt_gt'] = self.mutate_bt_gt(
-                child['bt_gt'][0], bt_gtMutation)
-            child['bt_pt'] = self.get_bt_pt(child['bt_gt'][0])
+            # bt_gt is position 2
+            child[2] = self.mutate_bt_gt(child[2], bt_gtMutation)
+            # bt_pt is position 3
+            child[3] = self.get_bt_pt(child[2])
         if rf_gtMutation is not None:
-            child['rf_gt'] = self.mutate_rf_gt(
-                child['rf_gt'][0], rf_gtMutation)
-            child['rf_pt'] = self.get_rf_pt(child['rf_gt'][0])
+            # rf_pt is position 4
+            child[4] = self.mutate_rf_gt(child[4], rf_gtMutation)
+            # rf_pt is position 5
+            child[5] = self.get_rf_pt(child[4])
 
         return child
 
@@ -383,13 +385,14 @@ class BloodType:
         else:
             return mutateTo + gt[1]
 
-    def chose_parents(self, size=1):
+    def choose_parents(self, size=1):
         sexs = np.array(self.population['sex'])
 
         prop_i = np.array([self.birth_distribution[(
             (self.birth_distribution[:, 0] - age) <= 0).sum() - 1, 3] for age in self.population['age']])
-        if (prop_i == 0).any():
-            return np.full((size, 2), -1)
+        # print(prop_i)
+        # if (prop_i == 0).any():
+        #     return np.full((size, 2), -1)
         # print(prop_i, prop_i.max())
 
         # @nb.njit
@@ -443,7 +446,7 @@ class BloodType:
 
         return parents_ij
 
-    # def choseParent(self):
+    # def chooseParent(self):
     #     sexs = np.array([p.sex for p in self.population])
     #
     #     prop_i = np.array([self.birth_distribution[(
@@ -554,7 +557,8 @@ class BloodType:
 
         fig, ax = plt.subplots()
         if showRf:
-            for i, p in enumerate(self.btrf_pt):
+            for i in reversed(range(len(self.btrf_pt))):
+                p = self.btrf_pt[i]
                 # ax.plot(X, Y[:, i], color=self.bt_pt_colors[p], alpha=1.00, label=p, linewidth=0.1)
                 ax.fill_between(x,
                                 y[:, i],
@@ -565,7 +569,8 @@ class BloodType:
                                 label=p
                                 )
         else:
-            for i, p in enumerate(self.bt_pt):
+            for i in reversed(range(len(self.bt_pt))):
+                p = self.bt_pt[i]
                 # ax.plot(X, Y[:, i], color=self.bt_pt_colors[p], alpha=1.00, label=p, linewidth=0.1)
                 ax.fill_between(x,
                                 y[:, i],
@@ -596,10 +601,10 @@ class BloodType:
             y = (y.T / y[:, -1]).T
 
         fig, ax = plt.subplots()
-        ax.fill_between(x, y[:, 0], np.zeros(y[:, 0].shape),
-                        color=default_colors[1], alpha=1, label='f')
         ax.fill_between(x, y[:, 1], y[:, 0],
                         color=default_colors[0], alpha=1, label='m')
+        ax.fill_between(x, y[:, 0], np.zeros(y[:, 0].shape),
+                        color=default_colors[1], alpha=1, label='f')
         plt.legend()
         plt.xlabel("years")
         plt.ylabel("")

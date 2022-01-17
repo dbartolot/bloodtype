@@ -6,10 +6,10 @@ from tqdm import tqdm, trange
 import ipdb
 
 random.seed(1234)
-model = BloodType(1000,
-                  deathRate=0.01,
-                  birthRate=0.05,
-                  timesteptype='w')
+model = BloodType(20000,
+                  # deathRate=0.0,
+                  # birthRate=0.0,
+                  timesteptype='y')
 
 # model.step()
 # ipdb.set_trace()
@@ -19,57 +19,61 @@ model = BloodType(1000,
 
 
 # iterations
-t = trange(5000)
+t = trange(30)
 for i in t:
-    t.set_description("Population Size {}".format(model.populationsize))
+    t.set_description("Population Size {}, year {:.1f}".format(
+        model.populationsize, model.time))
     t.refresh()
     model.step()
 model.print_state()
 
 
-# t = trange(1000)
-# for i in t:
-#     t.set_description("Population Size {}".format(model.populationsize))
-#     t.refresh()
-#     model.step(bt_mutation='A', mutations=10)
-#     model.step(bt_mutation='B', mutations=10)
-#
-# model.print_state()
+t = trange(5)
+for i in t:
+    t.set_description("Population Size {}, year {:.1f}".format(
+        model.populationsize, model.time))
+    t.refresh()
+    model.step(bt_mutation='A', mutations=100)
+    model.step(bt_mutation='B', mutations=100)
 
-# t = trange(1000000)
-# for i in t:
-#     t.set_description("Population Size {}".format(model.populationsize))
-#     t.refresh()
-#     model.step()
-# model.print_state()
+model.print_state()
 
-# model.setFitness(fitness={
-#         'O': 100,
-#         'A': 1,
-#         'B': 5,
-#         'AB': 20
-#     })
-# model.set_death_rate(value=0.8)
-#
-# for i in tqdm(range(36)):
-#     model.step()
-# model.printState()
-#
-# model.setFitness(fitness={
-#         'O': 1,
-#         'A': 1,
-#         'B': 1,
-#         'AB': 1
-#     })
-# model.setDeathRate(value=0.01)
-#
-#
-# t = trange(1000)
-# for i in t:
-#     t.set_description("Population Size {}".format(model.populationsize))
-#     t.refresh()
-#     model.step()
-# model.printState()
+t = trange(100)
+for i in t:
+    t.set_description("Population Size {}, year {:.1f}".format(
+        model.populationsize, model.time))
+    t.refresh()
+    model.step()
+model.print_state()
+
+model.set_fitness(fitness={
+        'O': 100,
+        'A': 1,
+        'B': 5,
+        'AB': 20
+    })
+model.set_death_rate(value=0.3)
+
+for i in tqdm(range(3)):
+    model.step()
+model.print_state()
+
+model.set_fitness(fitness={
+        'O': 1,
+        'A': 1,
+        'B': 1,
+        'AB': 1
+    })
+model.set_death_rate(value=0.01)
+
+
+t = trange(100)
+for i in t:
+    t.set_description("Population Size {}, year {:.1f}".format(
+        model.populationsize, model.time))
+    t.refresh()
+    model.step()
+model.print_state()
 
 
 # model.plotSize()
