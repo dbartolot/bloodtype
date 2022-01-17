@@ -6,10 +6,10 @@ from tqdm import tqdm, trange
 import ipdb
 
 random.seed(1234)
-model = BloodType(10000,
+model = BloodType(1000,
                   deathRate=0.01,
-                  birthRate=0.1,
-                  timesteptype='m')
+                  birthRate=0.05,
+                  timesteptype='w')
 
 # model.step()
 # ipdb.set_trace()
@@ -19,12 +19,13 @@ model = BloodType(10000,
 
 
 # iterations
-t = trange(1000)
+t = trange(5000)
 for i in t:
     t.set_description("Population Size {}".format(model.populationsize))
     t.refresh()
     model.step()
 model.print_state()
+
 
 # t = trange(1000)
 # for i in t:

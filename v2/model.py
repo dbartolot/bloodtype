@@ -6,7 +6,7 @@ from tqdm import tqdm, trange
 import ipdb
 
 random.seed(1234)
-model = BloodType(10000,
+model = BloodType(1000,
                   deathRate=0.01,
                   birthRate=0.1,
                   timesteptype='w')

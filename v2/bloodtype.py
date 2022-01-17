@@ -69,9 +69,9 @@ class BloodType:
     timesteptype = 'w'
     time = 0
     timesteptypes = {'d': 1 / 365, 'w': 7 / 365, 'm': 1 / 12, 'y': 1}
-    deathRate = 0.01
+    deathRate = 0.0086
     deaths = 0
-    birthRate = 0.011
+    birthRate = 0.0094
     births = 0
     fitness = pd.Series({'O': 1, 'A': 1, 'B': 1, 'AB': 1})
     filename = 'model.pkl'
@@ -82,8 +82,8 @@ class BloodType:
     def __init__(self,
                  startsize,
                  timesteptype='w',
-                 deathRate=0.01,
-                 birthRate=0.014,
+                 deathRate=0.0086,
+                 birthRate=0.0094,
                  filename='model.pkl'):
         self.states = []
         self.population = []
@@ -215,6 +215,9 @@ class BloodType:
                                              cdf])
 
     def step(self, bt_mutation=None, rf_mutation=None, mutations=0):
+        if self.populationsize < 1:
+            return
+
         # update time
         self.time += self.timestep
 
@@ -222,6 +225,10 @@ class BloodType:
         self.population['age'] += self.timestep
 
         self.kill_persons()
+        if self.populationsize < 1:
+            # self.log_state()
+            del self.states[-1]
+            return
         self.generate_offsprings(bt_mutation=bt_mutation,
                                  rf_mutation=rf_mutation,
                                  mutations=mutations)
@@ -276,6 +283,11 @@ class BloodType:
         self.population = self.population.append(person, ignore_index=True)
         self.populationsize = self.populationsize + 1
 
+    def add_persons(self, new_persons):
+        self.population = self.population.append(
+            new_persons, ignore_index=True)
+        self.populationsize = self.populationsize + new_persons.shape[0]
+
     def generate_offsprings(self,
                             bt_mutation=None,
                             rf_mutation=None,
@@ -297,32 +309,44 @@ class BloodType:
 
         parents = self.chose_parents(self.births)
 
-        for i in range(mutations):
-            i, j = parents[i]
-            if (i, j) == (-1, -1):
-                break
-            child = self.gen_mutated_offspring(i, j, bt_mutation, rf_mutation)
-            self.add_person(child)
+        children = [None]*self.births
 
-        for i in range(self.births - mutations):
-            i, j = parents[mutations + i]
-            if (i, j) == (-1, -1):
+        for i in range(mutations):
+            pid1, pid2 = parents[i]
+            if (pid1, pid2) == (-1, -1):
                 break
-            child = self.gen_offspring(i, j)
-            self.add_person(child)
+            children[i] = self.gen_mutated_offspring(
+                pid1, pid2, bt_mutation, rf_mutation)
+
+        for i in range(mutations, self.births):
+            pid1, pid2 = parents[i]
+            if (pid1, pid2) == (-1, -1):
+                break
+            children[i] = self.gen_offspring(pid1, pid2)
+
+        children = [child for child in children if child is not None]
+        self.births = len(children)
+        try:
+            children = pd.DataFrame(data=children, columns=df_cols)
+        except Exception:
+            ipdb.set_trace()
+        self.add_persons(children)
 
     def gen_offspring(self, pid1, pid2):
-        child_bt_gt = self.population['bt_gt'][pid1][random.getrandbits(1)] + \
-            self.population['bt_gt'][pid2][random.getrandbits(1)]
-        child_rf_gt = self.population['rf_gt'][pid1][random.getrandbits(1)] + \
-            self.population['rf_gt'][pid2][random.getrandbits(1)]
+        try:
+            child_bt_gt = self.population['bt_gt'][pid1][random.getrandbits(1)] + \
+                self.population['bt_gt'][pid2][random.getrandbits(1)]
+            child_rf_gt = self.population['rf_gt'][pid1][random.getrandbits(1)] + \
+                self.population['rf_gt'][pid2][random.getrandbits(1)]
+        except Exception:
+            ipdb.set_trace()
 
         child = self.gen_person(age=0.0,
                                 sex=None,
                                 bt_gt=child_bt_gt,
                                 rf_gt=child_rf_gt,
                                 )
-        return pd.DataFrame(data=[child], columns=df_cols)
+        return child
 
     def gen_mutated_offspring(self,
                               pid1,
@@ -409,9 +433,15 @@ class BloodType:
         index_list = indexlist(sexs, prop_i, size)
         # except Exception:
         #     ipdb.set_trace()
+        parents_ij = [[self.population.index[i], self.population.index[j]]
+                      for i, j in index_list]
+        # parents_ij = index_list
 
-        return [[self.population.index[i], self.population.index[j]]
-                for i, j in index_list]
+        for id in np.array(parents_ij).flatten():
+            if id not in self.population.index:
+                ipdb.set_trace()
+
+        return parents_ij
 
     # def choseParent(self):
     #     sexs = np.array([p.sex for p in self.population])
@@ -445,7 +475,8 @@ class BloodType:
             self.population['rf_pt']
         btrf_ptCounts = [btrf_ptFromPopulation.str.count(p).sum()
                          for p in self.btrf_pt]
-        sexs = np.unique(self.population['sex'], return_counts=True)[1]
+        sexs = [np.sum(self.population['sex'] == 'f').sum(), 0]
+        sexs[1] = self.populationsize-sexs[0]
         ages = [self.age_penalty[(
             (self.age_penalty[:, 0] - age) <= 0).sum() - 1, 0] for age in self.population['age']]
         age_groups = [ages.count(ag) for ag in self.age_penalty[:, 0]]
