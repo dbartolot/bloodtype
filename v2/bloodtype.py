@@ -6,6 +6,8 @@ import os
 import numba as nb
 import math
 import pandas as pd
+from tqdm import trange
+import time
 
 import ipdb
 
@@ -69,7 +71,7 @@ class BloodType:
     timesteptype = 'w'
     time = 0
     timesteptypes = {'d': 1 / 365, 'w': 7 / 365, 'm': 1 / 12, 'y': 1}
-    deathRate = 0.0086
+    deathRate = 0.0092
     deaths = 0
     birthRate = 0.0094
     births = 0
@@ -82,7 +84,7 @@ class BloodType:
     def __init__(self,
                  startsize,
                  timesteptype='w',
-                 deathRate=0.0086,
+                 deathRate=0.0092,
                  birthRate=0.0094,
                  filename='model.pkl'):
         self.states = []
@@ -108,6 +110,8 @@ class BloodType:
         self.population = self.gen_population(age='rand',
                                               size=self.populationsize)
         self.filename = filename
+        t = time.localtime()
+        self.plots_dir = './plots/' + time.strftime('%Y-%b-%d_%H%M', t) + '/'
 
     def gen_population(self,
                        age=0.0,
@@ -214,7 +218,7 @@ class BloodType:
                                              prop,
                                              cdf])
 
-    def step(self, bt_mutation=None, rf_mutation=None, mutations=0):
+    def step(self, bt_mutation=None, rf_mutation=None, mutations=None):
         if self.populationsize < 1:
             return
 
@@ -237,14 +241,30 @@ class BloodType:
         # update plots
         # self.updateSize()
 
+    def steps(self, steps, bt_mutation=None, rf_mutation=None,
+              mutations=None, print_state=True):
+        t = trange(steps)
+        for i in t:
+            t.set_description("Population Size {}, year {:.1f}".format(
+                self.populationsize, self.time))
+            t.refresh()
+            self.step(bt_mutation=bt_mutation,
+                      rf_mutation=rf_mutation,
+                      mutations=mutations)
+
+        if print_state:
+            self.print_state()
+
     # @nb.jit
     def get_deathlist(self):
         # prop_bt = np.array([self.fitness[bt]
         #                    for bt in self.population['bt_pt']])
         prop_bt = self.fitness[self.population['bt_pt']]
+        prop_bt = prop_bt/np.sum(prop_bt)
 
         prop_age = np.array([self.age_penalty[((self.age_penalty[:, 0] - age) <= 0).sum() - 1, 3]
                              for age in self.population['age']])
+        prop_age = prop_age/np.sum(prop_age)
 
         prop = np.array(prop_bt * prop_age)
         # prop = prop / np.sum(prop)
@@ -303,7 +323,8 @@ class BloodType:
             mutations = 0
 
         # reduce number of mutations to the proper size of births
-        mutations = self.births if self.births < mutations else mutations
+        if (mutations is None) or (self.births < mutations):
+            mutations = self.births
 
         parents = self.choose_parents(self.births)
 
@@ -390,6 +411,8 @@ class BloodType:
 
         prop_i = np.array([self.birth_distribution[(
             (self.birth_distribution[:, 0] - age) <= 0).sum() - 1, 3] for age in self.population['age']])
+        prop_i = prop_i/np.sum(prop_i)
+
         # print(prop_i)
         # if (prop_i == 0).any():
         #     return np.full((size, 2), -1)
@@ -440,9 +463,9 @@ class BloodType:
                       for i, j in index_list]
         # parents_ij = index_list
 
-        for id in np.array(parents_ij).flatten():
-            if id not in self.population.index:
-                ipdb.set_trace()
+        # for id in np.array(parents_ij).flatten():
+        #     if id not in self.population.index:
+        #         ipdb.set_trace()
 
         return parents_ij
 
@@ -496,7 +519,36 @@ class BloodType:
 
         self.states.append(currentstate)
 
-    def check_directory(self, dir):
+    def save_states(self):
+        age_groups = ['[{}{})'.format(ag[0], '' if i == self.age_penalty.shape[0]-1 else '-{}'.format(ag[1]))
+                      for i, ag in enumerate(self.age_penalty)]
+        bt_pt = ['bt_pt-{}'.format(bt) for bt in self.bt_pt]
+        btrf_pt = ['btrf_pt-{}'.format(btrf) for btrf in self.btrf_pt]
+
+        cols = ['time',
+                'population_size',
+                'deaths',
+                'births',
+                'sex_f',
+                'sex_m',
+                ] + bt_pt + btrf_pt + age_groups
+
+        log_flattend = []
+        for state in self.states:
+            s_flatten = []
+            for e in state:
+                if type(e) is list:
+                    s_flatten.extend(e)
+                else:
+                    s_flatten.append(e)
+            log_flattend.append(s_flatten)
+        log_df = pd.DataFrame(data=log_flattend, columns=cols)
+        self.check_directory(self.plots_dir)
+        log_df.to_csv(self.plots_dir+'log_df.csv', header=True, index=False)
+        # ipdb.set_trace()
+
+    @staticmethod
+    def check_directory(dir):
         if not os.path.isdir(dir):
             os.makedirs(dir)
 
@@ -540,7 +592,9 @@ class BloodType:
         plt.tight_layout()
         if save:
             self.check_directory(self.plots_dir)
-            plt.savefig(self.plots_dir + "populationsize.png")
+            plt.savefig(self.plots_dir + "populationsize{}.png".format(
+                '_cum' if cumulativ else ''
+            ))
             plt.close()
         else:
             plt.show()
@@ -634,7 +688,8 @@ class BloodType:
                             color=default_colors[i],
                             alpha=1,
                             label='{}-{}'.format(int(self.age_penalty[i, 0]),
-                                                 int(self.age_penalty[i, 1])))
+                                                 r'$\infty$' if i == y.shape[1]-1 else int(self.age_penalty[i, 1]))
+                            )
         plt.legend()
         plt.xlabel("years")
         plt.ylabel("")
