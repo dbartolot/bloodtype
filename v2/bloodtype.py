@@ -44,6 +44,11 @@ df_cols = ['age',
            'offspring_prob']
 
 
+SCALER = 1.4
+DEATH_RATE = 0.0094*SCALER
+BIRTH_RATE = 0.0096*SCALER
+
+
 class BloodType:
     states = []
     population = []
@@ -71,21 +76,22 @@ class BloodType:
     timesteptype = 'w'
     time = 0
     timesteptypes = {'d': 1 / 365, 'w': 7 / 365, 'm': 1 / 12, 'y': 1}
-    deathRate = 0.0092
+    deathRate = DEATH_RATE
     deaths = 0
-    birthRate = 0.0094
+    birthRate = BIRTH_RATE
     births = 0
     fitness = pd.Series({'O': 1, 'A': 1, 'B': 1, 'AB': 1})
     filename = 'model.pkl'
     plots_dir = './plots/'
     filename_age_penalty = 'age_penalty.csv'
     filename_birth_distribution = 'birth_distribution.csv'
+    log_file = "log.txt"
 
     def __init__(self,
                  startsize,
                  timesteptype='w',
-                 deathRate=0.0092,
-                 birthRate=0.0094,
+                 deathRate=DEATH_RATE,
+                 birthRate=BIRTH_RATE,
                  filename='model.pkl'):
         self.states = []
         self.population = []
@@ -153,6 +159,11 @@ class BloodType:
     def get_fitness(self, bt_pt):
         return self.fitness[bt_pt]
 
+    def log(self, string):
+        self.check_directory(self.plots_dir)
+        with open(self.plots_dir+self.log_file, "a") as f:
+            f.writelines(string)
+
     @staticmethod
     def get_offspring_prob(bt_gt, value=None):
         if value is not None:
@@ -182,19 +193,24 @@ class BloodType:
 
     def set_fitness(self, fitness):
         self.fitness = pd.Series(fitness)
+        self.log("#{}#: Fitness = {}\n".format(self.time, self.fitness))
 
     def set_timesteps(self, timesteptype):
         self.timesteptype = timesteptype
         self.timestep = self.timesteptypes[self.timesteptype]
+        self.log("#{}#: timestep type = {}\n".format(
+            self.time, self.timesteptype))
 
     def set_death_rate(self, value):
         self.deathRate = value
+        self.log("#{}#: death rate = {}\n".format(self.time, self.deathRate))
 
     def get_death_rate(self):
         return self.deathRate * self.timestep
 
     def set_birth_rate(self, value):
         self.birthRate = value
+        self.log("#{}#: birth rate = {}\n".format(self.time, self.birthRate))
 
     def get_birth_rate(self):
         return self.birthRate * self.timestep
@@ -267,7 +283,7 @@ class BloodType:
         prop_age = prop_age/np.sum(prop_age)
 
         prop = np.array(prop_bt * prop_age)
-        # prop = prop / np.sum(prop)
+        prop = prop / np.sum(prop)
 
         self.deaths = self.populationsize * self.get_death_rate()
         if random.random() < self.deaths-int(self.deaths):
@@ -276,6 +292,7 @@ class BloodType:
             self.deaths = round(self.deaths)
 
         # @nb.jit(nopython=True, parallel=True)
+
         def indexlist(deaths, prop):
             indexList = np.empty((deaths), dtype=np.int32)
             for i in nb.prange(deaths):
@@ -347,10 +364,8 @@ class BloodType:
         self.births = len(children)
         if self.births == 0:
             ipdb.set_trace()
-        try:
-            children = pd.DataFrame(data=children, columns=df_cols)
-        except Exception:
-            ipdb.set_trace()
+
+        children = pd.DataFrame(data=children, columns=df_cols)
         self.add_persons(children)
 
     def gen_offspring(self, pid1, pid2):
@@ -503,9 +518,12 @@ class BloodType:
                          for p in self.btrf_pt]
         sexs = [np.sum(self.population['sex'] == 'f').sum(), 0]
         sexs[1] = self.populationsize-sexs[0]
-        ages = [self.age_penalty[(
-            (self.age_penalty[:, 0] - age) <= 0).sum() - 1, 0] for age in self.population['age']]
-        age_groups = [ages.count(ag) for ag in self.age_penalty[:, 0]]
+
+        age_group_bins = np.append(self.age_penalty[:, 0],
+                                   np.max([self.population['age'].max(),
+                                          self.age_penalty[-1, 0]+10]))
+        age_groups = np.histogram(self.population['age'],
+                                  bins=age_group_bins)[0].tolist()
 
         currentstate = [self.time,
                         len(self.population),  # self.populationsize,
@@ -542,10 +560,10 @@ class BloodType:
                 else:
                     s_flatten.append(e)
             log_flattend.append(s_flatten)
+
         log_df = pd.DataFrame(data=log_flattend, columns=cols)
         self.check_directory(self.plots_dir)
         log_df.to_csv(self.plots_dir+'log_df.csv', header=True, index=False)
-        # ipdb.set_trace()
 
     @staticmethod
     def check_directory(dir):
