@@ -1,7 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
 import random
-import pickle
 import os
 import numba as nb
 import math
@@ -13,17 +12,9 @@ import ipdb
 
 # default_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-default_colors = ['#1f77b4',
-                  '#ff7f0e',
-                  '#2ca02c',
-                  '#d62728',
-                  '#9467bd',
-                  '#8c564b',
-                  '#e377c2',
-                  '#7f7f7f',
-                  '#bcbd22',
-                  '#17becf',
-                  '#1a55FF']
+default_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
+                  '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
+                  '#bcbd22', '#17becf', '#1a55FF']
 
 # df_pos = {
 #     'age': 0,
@@ -76,9 +67,9 @@ class BloodType:
     timesteptype = 'w'
     time = 0
     timesteptypes = {'d': 1 / 365, 'w': 7 / 365, 'm': 1 / 12, 'y': 1}
-    deathRate = DEATH_RATE
+    death_rate = DEATH_RATE
     deaths = 0
-    birthRate = BIRTH_RATE
+    birth_rate = BIRTH_RATE
     births = 0
     fitness = pd.Series({'O': 1, 'A': 1, 'B': 1, 'AB': 1})
     filename = 'model.pkl'
@@ -90,8 +81,8 @@ class BloodType:
     def __init__(self,
                  startsize,
                  timesteptype='w',
-                 deathRate=DEATH_RATE,
-                 birthRate=BIRTH_RATE,
+                 death_rate=DEATH_RATE,
+                 birth_rate=BIRTH_RATE,
                  filename='model.pkl'):
         self.states = []
         self.population = []
@@ -102,13 +93,17 @@ class BloodType:
         self.deaths = 0
         self.births = 0
 
-        self.deathRate = deathRate
-        self.birthRate = birthRate
+        self.check_directory(self.plots_dir)
+        t = time.localtime()
+        self.plots_dir = './plots/' + time.strftime('%Y-%b-%d_%H%M', t) + '/'
+        self.check_directory(self.plots_dir)
 
         self.set_timesteps(timesteptype)
         self.load_age_penalty()
         self.load_birth_distribution()
 
+        self.set_death_rate(death_rate)
+        self.set_birth_rate(birth_rate)
         # plt.ion()
         # self.fig, self.ax = plt.subplots(nrows=1, ncols=2)
 
@@ -116,8 +111,6 @@ class BloodType:
         self.population = self.gen_population(age='rand',
                                               size=self.populationsize)
         self.filename = filename
-        t = time.localtime()
-        self.plots_dir = './plots/' + time.strftime('%Y-%b-%d_%H%M', t) + '/'
 
     def gen_population(self,
                        age=0.0,
@@ -202,18 +195,18 @@ class BloodType:
             self.time, self.timesteptype))
 
     def set_death_rate(self, value):
-        self.deathRate = value
-        self.log("#{}#: death rate = {}\n".format(self.time, self.deathRate))
+        self.death_rate = value
+        self.log("#{}#: death rate = {}\n".format(self.time, self.death_rate))
 
     def get_death_rate(self):
-        return self.deathRate * self.timestep
+        return self.death_rate * self.timestep
 
     def set_birth_rate(self, value):
-        self.birthRate = value
-        self.log("#{}#: birth rate = {}\n".format(self.time, self.birthRate))
+        self.birth_rate = value
+        self.log("#{}#: birth rate = {}\n".format(self.time, self.birth_rate))
 
     def get_birth_rate(self):
-        return self.birthRate * self.timestep
+        return self.birth_rate * self.timestep
 
     def load_age_penalty(self):
         self.age_penalty = np.genfromtxt(self.filename_age_penalty,
@@ -724,18 +717,3 @@ class BloodType:
         print("step: {:3.2f}".format(self.states[-1][0]),
               self.states[-1][1:]
               )
-
-    def save(self):
-        with open(self.filename, 'wb') as f:
-            pickle.dump(self, f)
-        # pickle.dump(self.__dict__, f)
-
-    def load(self, filename):
-        with open(filename, 'rb') as f:
-            tmp_dict = pickle.load(f)
-
-        self.__dict__.update(tmp_dict)
-        self.__dict__.update(tmp_dict)
-        self.__dict__.update(tmp_dict)
-        self.__dict__.update(tmp_dict)
-        self.__dict__.update(tmp_dict)

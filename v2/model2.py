@@ -29,12 +29,12 @@ model = BloodType(20000,
 #         'B': 4,
 #         'AB': 1
 #     })
-model.set_fitness(fitness={
-        'O': 7,
-        'A': 2,
-        'B': 4,
-        'AB': 2
-    })
+# model.set_fitness(fitness={
+#         'O': 7,
+#         'A': 2,
+#         'B': 4,
+#         'AB': 2
+#     })
 
 model.steps(100)
 model.steps(3, bt_mutation='A')
@@ -42,8 +42,9 @@ model.steps(3, bt_mutation='B')
 model.steps(100)
 
 
-model.steps(500)
+model.steps(1000)
 
+#
 # model.set_death_rate(value=2*BloodType.death_rate)
 # model.steps(5)
 #
@@ -53,10 +54,10 @@ model.steps(500)
 #
 # model.set_birth_rate(value=BloodType.birth_rate)
 # model.steps(10)
-
-model.steps(20, rf_mutation='-')
-
-model.steps(9000)
+#
+# model.steps(20, rf_mutation='-')
+#
+# model.steps(2000)
 
 # model.plotSize()
 model.plot_size(save=True)
