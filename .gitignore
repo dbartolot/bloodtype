@@ -129,7 +129,3 @@ dmypy.json
 .pyre/
 
 # Additional directories
-plots/
-plot/
-v1/plot/
-v2/plot/

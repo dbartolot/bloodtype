@@ -1,0 +1,6 @@
+0: Fitness = O     8
+A     2
+B     4
+AB    1
+dtype: int64
+1221: death rate = 0.026321226: death rate = 0.013161226: birth rate = 0.0268799999999999981236: birth rate = 0.013439999999999999

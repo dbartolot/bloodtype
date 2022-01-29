@@ -1,0 +1,7 @@
+#0#: Fitness = O     100
+A      10
+B      10
+AB      1
+dtype: int64
+#306#: death rate = 0.3
+#316#: death rate = 0.01316

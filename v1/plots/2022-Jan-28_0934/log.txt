@@ -1,0 +1,14 @@
+#0#: timestep type = y
+#0#: Fitness = {'O': 7, 'A': 2, 'B': 4, 'AB': 2}
+#0#: timestep type = y
+#0#: Fitness = {'O': 7, 'A': 2, 'B': 4, 'AB': 2}
+#0#: timestep type = y
+#0#: Fitness = {'O': 7, 'A': 2, 'B': 4, 'AB': 2}
+#1206#: death rate = 0.02
+#1211#: death rate = 0.01
+#1211#: birth rate = 0.022
+#1206#: death rate = 0.02
+#1211#: death rate = 0.01
+#1211#: birth rate = 0.022
+#1221#: birth rate = 0.011
+#1221#: birth rate = 0.011
