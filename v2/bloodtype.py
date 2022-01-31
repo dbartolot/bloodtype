@@ -21,7 +21,7 @@ df_cols = ['age',
            'bt_pt',
            'rf_gt',
            'rf_pt',
-           'fitness',
+           'weights',
            ]
 
 
@@ -72,7 +72,7 @@ class BloodType:
     deaths = 0
     birth_rate = BIRTH_RATE
     births = 0
-    fitness = pd.Series({'O': 1, 'A': 1, 'B': 1, 'AB': 1})
+    weights = pd.Series({'O': 1, 'A': 1, 'B': 1, 'AB': 1})
     plots_dir = './plots/'
     filename_age_penalty = 'age_penalty.csv'
     filename_birth_distribution = 'birth_distribution.csv'
@@ -86,7 +86,7 @@ class BloodType:
                  birth_rate=BIRTH_RATE,
                  age_based_model=True,
                  ):
-        """Short summary.
+        """Initialize the model.
 
         Parameters
         ----------
@@ -103,7 +103,7 @@ class BloodType:
             Default is `DEATH_RATE`.
         birth_rate : float
             The `birth_rate` expresses the number of people which are born per
-            person. Calculated by the number of birhts in a country divided by
+            person. Calculated by the number of births in a country divided by
             their average population size. Should usually be between 0 and 1.
             Default is `BRITH_RATE`.
         age_based_model : bool
@@ -173,14 +173,14 @@ class BloodType:
         bt_pt = self.get_bt_pt(bt_gt)
         rf_pt = self.get_rf_pt(rf_gt)
 
-        fitness_factor = self.get_fitness(bt_pt)
+        weights_factor = self.get_weights(bt_pt)
 
         ret = [age, sex, bt_gt, bt_pt, rf_gt,
-               rf_pt, fitness_factor]
+               rf_pt, weights_factor]
         return ret
 
-    def get_fitness(self, bt_pt):
-        return self.fitness[bt_pt]
+    def get_weights(self, bt_pt):
+        return self.weights[bt_pt]
 
     def log(self, string):
         self.check_directory(self.plots_dir)
@@ -207,9 +207,9 @@ class BloodType:
         else:
             return '-'
 
-    def set_fitness(self, fitness):
-        self.fitness = pd.Series(fitness)
-        self.log("#{}#: Fitness = {}\n".format(self.time, self.fitness))
+    def set_weights(self, weights):
+        self.weights = pd.Series(weights)
+        self.log("#{}#: Weights = {}\n".format(self.time, self.weights))
 
     def set_timesteps(self, timesteptype):
         self.timesteptype = timesteptype
@@ -287,14 +287,18 @@ class BloodType:
         steps : int
             Number of individual time steps executed by the simulation.
         bt_mutation : char
-            Gives every offspring durring the steps a mutated blood type of the
+            Gives every offspring during the steps a mutated blood type of the
             `bt_mutation`, which is either 'A' or 'B'.
+            If `bt_mutation` is not set or set to None no mutations for the
+            blood type are introduced.
         rf_mutation : char
-            Gives every offspring durring the steps a mutated blood type of the
+            Gives every offspring during the steps a mutated blood type of the
             `rf_mutation`, which is either '+' or '-'.
+            If `rf_mutation` is not set or set to None no mutations for the
+            blood type are introduced.
         mutations : int
             The number of offsprings which shoudl carry the bt or rf mutation.
-            If the value is None or greater than the number of births durring
+            If the value is None or greater than the number of births during
             an iteration, the value gets set to the births amount of mutations.
         print_state : bool
             Prints the state of the last step after finischen all time steps.
@@ -302,7 +306,6 @@ class BloodType:
             Shows always a score which indicateds by how much the current
             distribution of blood types and rhesus factors is off from the
             austrian distribution.
-
         """
         t = trange(steps)
         off_score = self.min_off_score[0]
@@ -334,7 +337,7 @@ class BloodType:
             self.print_state()
 
     def get_deathlist(self):
-        prop_bt = self.fitness[self.population['bt_pt']]
+        prop_bt = self.weights[self.population['bt_pt']]
         prop_bt = prop_bt / np.sum(prop_bt)
 
         if self.age_based_model:

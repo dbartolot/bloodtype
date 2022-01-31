@@ -23,13 +23,13 @@ model = BloodType(20000,
 
 
 # iterations
-# model.set_fitness(fitness={
+# model.set_weights(weights={
 #         'O': 8,
 #         'A': 2,
 #         'B': 4,
 #         'AB': 1
 #     })
-model.set_fitness(fitness={
+model.set_weights(weights={
         'O': 100,
         'A': 10,
         'B': 10,
