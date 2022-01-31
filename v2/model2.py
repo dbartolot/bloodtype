@@ -19,7 +19,9 @@ import ipdb
 model = BloodType(20000,
                   death_rate=BloodType.death_rate,
                   birth_rate=BloodType.birth_rate,
-                  timesteptype='y')
+                  timesteptype='y',
+                  age_based_model=False
+                  )
 
 
 # iterations
@@ -36,13 +38,13 @@ model = BloodType(20000,
 #         'AB': 2
 #     })
 
-model.steps(100)
-model.steps(3, bt_mutation='A')
-model.steps(3, bt_mutation='B')
-model.steps(100)
+model.steps(10)
+# model.steps(3, bt_mutation='A')
+# model.steps(3, bt_mutation='B')
+# model.steps(100)
 
 
-model.steps(1000)
+# model.steps(1000)
 
 #
 # model.set_death_rate(value=2*BloodType.death_rate)

@@ -40,9 +40,11 @@ model.steps(100)
 model.steps(3, bt_mutation='A')
 model.steps(3, bt_mutation='B')
 model.steps(100)
+model.steps(10, rf_mutation='-')
 
-
-model.steps(500)
+#
+#
+# model.steps(500)
 
 # model.set_death_rate(value=2*BloodType.death_rate)
 # model.steps(5)
@@ -54,11 +56,11 @@ model.steps(500)
 # model.set_birth_rate(value=BloodType.birth_rate)
 # model.steps(10)
 
-model.steps(20, rf_mutation='-')
 
-model.steps(9000)
+model.steps(6000)
 
 # model.plotSize()
+model.save_states()
 model.plot_size(save=True)
 model.plot_size(cumulativ=True, save=True)
 model.plot_sex(save=True)
@@ -69,5 +71,4 @@ model.plot_bt_pt(ratio=True, save=True)
 model.plot_bt_pt(showRf=True, ratio=True, save=True)
 model.plot_age_groups(ratio=False, save=True)
 model.plot_age_groups(ratio=True, save=True)
-model.save_states()
 ipdb.set_trace()
