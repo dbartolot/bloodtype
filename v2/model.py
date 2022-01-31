@@ -1,75 +1,54 @@
-import random
 from bloodtype import BloodType
-
-from tqdm import tqdm, trange
-
 import ipdb
 
-random.seed(1234)
-model = BloodType(1000,
-                  deathRate=0.01,
-                  birthRate=0.1,
-                  timesteptype='w')
 
-ipdb.set_trace()
+# random.seed(1234)
+model = BloodType(20000,
+                  death_rate=BloodType.death_rate,
+                  birth_rate=BloodType.birth_rate,
+                  timesteptype='y')
+
 
 # iterations
-t = trange(1000)
-for i in t:
-    t.set_description("Population Size {}".format(model.populationsize))
-    t.refresh()
-    model.step()
-model.printState()
+model.set_fitness(fitness={
+        'O': 8,
+        'A': 2,
+        'B': 4,
+        'AB': 1
+    })
 
-t = trange(1000)
-for i in t:
-    t.set_description("Population Size {}".format(model.populationsize))
-    t.refresh()
-    model.step(bt_mutation='A', mutations=10)
-    model.step(bt_mutation='B', mutations=10)
-
-model.printState()
-
-t = trange(100000)
-for i in t:
-    t.set_description("Population Size {}".format(model.populationsize))
-    t.refresh()
-    model.step()
-model.printState()
-
-# model.setFitness(fitness={
-#         'O': 100,
-#         'A': 1,
-#         'B': 5,
-#         'AB': 20
-#     })
-# model.setDeathRate(value=0.8)
-#
-# for i in tqdm(range(36)):
-#     model.step()
-# model.printState()
-
-# model.setFitness(fitness={
-#         'O': 1,
-#         'A': 1,
-#         'B': 1,
-#         'AB': 1
-#     })
-# model.setDeathRate(value=0.01)
+model.steps(100)
+model.steps(3, bt_mutation='A')
+model.steps(3, bt_mutation='B')
+model.steps(100)
+model.steps(10, rf_mutation='-')
 
 
-# t = trange(1000)
-# for i in t:
-#     t.set_description("Population Size {}".format(model.populationsize))
-#     t.refresh()
-#     model.step()
-# model.printState()
+model.steps(500)
 
+model.set_death_rate(value=2*BloodType.death_rate)
+model.steps(5)
+
+model.set_death_rate(value=BloodType.death_rate)
+model.set_birth_rate(value=2*BloodType.birth_rate)
+model.steps(10)
+
+model.set_birth_rate(value=BloodType.birth_rate)
+model.steps(10)
+
+
+model.steps(6000)
 
 # model.plotSize()
-model.plotSize(save=True)
-# model.plotSex(ratio=True)
-model.plotBtPt(save=True)
-model.plotBtPt(showRf=True, save=True)
-model.plotAgeGroups(ratio=False, save=True)
-# ipdb.set_trace()
+model.save_states()
+model.plot_size(save=True)
+model.plot_size(cumulativ=True, save=True)
+model.plot_sex(save=True)
+model.plot_sex(ratio=True, save=True)
+model.plot_bt_pt(save=True)
+model.plot_bt_pt(showRf=True, save=True)
+model.plot_bt_pt(ratio=True, save=True)
+model.plot_bt_pt(showRf=True, ratio=True, save=True)
+model.plot_age_groups(ratio=False, save=True)
+model.plot_age_groups(ratio=True, save=True)
+ipdb.set_trace()
