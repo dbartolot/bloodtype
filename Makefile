@@ -3,8 +3,8 @@ start:
 
 
 env:
-	source ~/envs/bloodtype/bin/activate
+	python3 -m venv venv
+	venv/bin/pip3 install numpy matplotlib numba pandas tqdm ipdb
 
-
-make_env:
-	python -m venv ~/envs/bloodtype
+rm_env:
+	rm -rf ./venv

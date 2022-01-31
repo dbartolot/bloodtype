@@ -378,12 +378,13 @@ class BloodType:
         self.populationsize = self.populationsize - 1
 
     def add_person(self, person):
-        self.population = self.population.append(person, ignore_index=True)
+        self.population = pd.concat([self.population, person],
+                                    ignore_index=True)
         self.populationsize = self.populationsize + 1
 
     def add_persons(self, new_persons):
-        self.population = self.population.append(
-            new_persons, ignore_index=True)
+        self.population = pd.concat([self.population, new_persons],
+                                    ignore_index=True)
         self.populationsize = self.populationsize + new_persons.shape[0]
 
     def generate_offsprings(self,
