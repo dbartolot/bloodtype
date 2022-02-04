@@ -92,24 +92,26 @@ class BloodType:
         ----------
         startsize : int
             Size of the starting population.
-        timesteptype : char
+        timesteptype : {'d', 'w', 'm', 'y'}
             Indicates the simulation steps, which can be 'd', 'w', 'm' and 'y'
             for days, weeks, months and years respectively.
-            Default is 'y'.
+            [default: 'y'].
         death_rate : float
-            The `death_rate` expresses the number of people which die per
-            person. Calculated by the number of deaths in a country divided by
-            their average population size. Should usually be between 0 and 1.
-            Default is `DEATH_RATE`.
+            The `death_rate` expresses the number of people who die per person.
+            Calculated by the number of deaths in a country divided by their
+            average population size. Should usually be between 0 and 1.
+            In most Westernized countries, it is around 0.1.
+            [default: `DEATH_RATE`]
         birth_rate : float
-            The `birth_rate` expresses the number of people which are born per
-            person. Calculated by the number of births in a country divided by
-            their average population size. Should usually be between 0 and 1.
-            Default is `BRITH_RATE`.
+            The `birth_rate` expresses the number of people born per person.
+            Calculated by the number of births in a country divided by their
+            average population size. Should usually be between 0 and 1.
+            In most Westernized countries, it is around 0.1.
+            [default: `BRITH_RATE`]
         age_based_model : bool
             If True the age of every person is taken into account by selecting
             who gets to die and who gives birth.
-            Default is True.
+            [default: True]
 
         """
         self.states = []
@@ -286,26 +288,33 @@ class BloodType:
         ----------
         steps : int
             Number of individual time steps executed by the simulation.
-        bt_mutation : char
-            Gives every offspring during the steps a mutated blood type of the
-            `bt_mutation`, which is either 'A' or 'B'.
+        bt_mutation : None or {'A', 'B'}
+            Mutates one random allele in the blood group of `mutations` number
+            of offspring to `bt_mutation`, which is either 'A' or 'B'.
             If `bt_mutation` is not set or set to None no mutations for the
             blood type are introduced.
-        rf_mutation : char
-            Gives every offspring during the steps a mutated blood type of the
-            `rf_mutation`, which is either '+' or '-'.
-            If `rf_mutation` is not set or set to None no mutations for the
-            blood type are introduced.
-        mutations : int
-            The number of offsprings which shoudl carry the bt or rf mutation.
+            [default: None]
+        rf_mutation : None or {'+', '-'}
+            Mutates one random allele in the rhesus factor of `mutations`
+            number of offspring to `rf_mutation`, which is either '+' or '-'.
+            If `rf_mutation` is not set or set to None, no mutations get
+            introduced for the rhesus factor.
+            [default: None]
+        mutations : None or int
+            The number of offsprings which should carry the blood type and/or
+            rhesus factor mutation.
             If the value is None or greater than the number of births during
-            an iteration, the value gets set to the births amount of mutations.
+            an iteration, the value gets set to the number of births per
+            iteration.
+            [default: None].
         print_state : bool
             Prints the state of the last step after finischen all time steps.
+            [default: True]
         show_off_score : bool
             Shows always a score which indicateds by how much the current
             distribution of blood types and rhesus factors is off from the
-            austrian distribution.
+            austrian distribution. The smaller the better.
+            [default: True]
         """
         t = trange(steps)
         off_score = self.min_off_score[0]
