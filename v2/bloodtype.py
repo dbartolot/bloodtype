@@ -9,6 +9,8 @@ import pandas as pd
 from tqdm import trange
 import time
 import sys
+import shutil
+import inspect
 
 
 default_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
@@ -127,8 +129,9 @@ class BloodType:
 
         self.check_directory(self.plots_dir)
         t = time.localtime()
-        self.plots_dir = './plots/' + time.strftime('%Y-%b-%d_%H%M', t) + '/'
+        self.plots_dir = './plots/' + time.strftime('%Y-%m-%d_%H%M', t) + '/'
         self.check_directory(self.plots_dir)
+        shutil.copy(inspect.stack()[-1].filename, self.plots_dir)
 
         self.set_timesteps(timesteptype)
         self.load_age_penalty()
@@ -210,8 +213,12 @@ class BloodType:
             return '-'
 
     def set_weights(self, weights):
-        self.weights = pd.Series(weights)
-        self.log("#{}#: Weights = {}\n".format(self.time, self.weights))
+        if weights == 'default':
+            self.weights = pd.Series({'O': 1, 'A': 1, 'B': 1, 'AB': 1})
+        else:
+            self.weights = pd.Series(weights)
+        self.log("#{}#: ".format(self.time)
+                 + "Weights = {}\n".format(self.weights.to_dict()))
 
     def set_timesteps(self, timesteptype):
         self.timesteptype = timesteptype
@@ -277,6 +284,11 @@ class BloodType:
                                  rf_mutation=rf_mutation,
                                  mutations=mutations)
 
+        if (mutations is int and mutations > 0) and \
+                (bt_mutation is not None or rf_mutation is not None):
+            self.log("#{}#: mutations = {};".format(self.time, mutations)
+                     + " bt_mutation = {};".foramt(bt_mutation)
+                     + " rf_mutation = {}\n".format(rf_mutation))
         # log state
         self.log_state()
 
@@ -551,7 +563,7 @@ class BloodType:
 
         self.states.append(currentstate)
 
-    def save_states(self):
+    def save_states(self, additional_files=True):
         age_groups = ['[{}{})'.format(ag[0], '' if i == self.age_penalty.shape[0] - 1 else '-{}'.format(ag[1]))
                       for i, ag in enumerate(self.age_penalty)]
         bt_pt = ['bt_pt-{}'.format(bt) for bt in self.bt_pt]
@@ -578,6 +590,17 @@ class BloodType:
         log_df = pd.DataFrame(data=log_flattend, columns=cols)
         self.check_directory(self.plots_dir)
         log_df.to_csv(self.plots_dir + 'log_df.csv', header=True, index=False)
+
+        if additional_files:
+            df_bt = log_df[bt_pt].divide(
+                np.sum(log_df[bt_pt], axis=1), axis='rows')
+            df_bt.to_csv(self.plots_dir + 'bt_df.csv',
+                         header=True, index=False)
+
+            df_btrf = log_df[btrf_pt].divide(
+                np.sum(log_df[btrf_pt], axis=1), axis='rows')
+            df_btrf.to_csv(self.plots_dir + 'btrf_df.csv',
+                           header=True, index=False)
 
     @staticmethod
     def check_directory(dir):
