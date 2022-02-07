@@ -99,13 +99,15 @@ class BloodType:
             for days, weeks, months and years respectively.
             [default: 'y'].
         death_rate : float
-            The `death_rate` expresses the number of people who die per person.
+            The `death_rate` expresses the number of deaths per person per
+            year.
             Calculated by the number of deaths in a country divided by their
             average population size. Should usually be between 0 and 1.
             In most Westernized countries, it is around 0.1.
             [default: `DEATH_RATE`]
         birth_rate : float
-            The `birth_rate` expresses the number of people born per person.
+            The `birth_rate` expresses the number of births per person per
+            year.
             Calculated by the number of births in a country divided by their
             average population size. Should usually be between 0 and 1.
             In most Westernized countries, it is around 0.1.
