@@ -19,23 +19,26 @@ model = BloodType(20000,
 
 
 model.set_weights(weights={
-        'O': 7,
-        'A': 3,
-        'B': 4,
-        'AB': 2
+        'O': 15,
+        'A': 2,
+        'B': 6,
+        'AB': 1
     })
 
 model.steps(100)
-model.steps(3, bt_mutation='A')
-model.steps(3, bt_mutation='B')
-model.steps(100)
+model.steps(2, bt_mutation='A')
+model.steps(2, bt_mutation='B')
+# model.steps(50)
+model.steps(50)
+model.steps(10, rf_mutation='-')
+model.steps(50)
 model.steps(10, rf_mutation='-')
 
 
-
-model.steps(8000)
+model.steps(3000)
 
 model.save_states()
+# ipdb.set_trace()
 model.plot_size(save=True)
 model.plot_size(cumulativ=True, save=True)
 model.plot_sex(save=True)
@@ -47,4 +50,3 @@ model.plot_bt_pt(showRf=True, ratio=True, save=True)
 model.plot_age_groups(ratio=False, save=True)
 model.plot_age_groups(ratio=True, save=True)
 ipdb.set_trace()
-model.save_states(), model.plot_size(save=True), model.plot_size(cumulativ=True, save=True), model.plot_sex(save=True), model.plot_sex(ratio=True, save=True), model.plot_bt_pt(save=True), model.plot_bt_pt(showRf=True, save=True), model.plot_bt_pt(ratio=True, save=True), model.plot_bt_pt(showRf=True, ratio=True, save=True), model.plot_age_groups(ratio=False, save=True), model.plot_age_groups(ratio=True, save=True)

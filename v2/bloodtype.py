@@ -131,7 +131,7 @@ class BloodType:
 
         self.check_directory(self.plots_dir)
         t = time.localtime()
-        self.plots_dir = './plots/' + time.strftime('%Y-%m-%d_%H%M', t) + '/'
+        self.plots_dir = './plots/' + time.strftime('%Y-%m-%d_%H%M%S', t) + '/'
         self.check_directory(self.plots_dir)
         shutil.copy(inspect.stack()[-1].filename, self.plots_dir)
 
@@ -354,8 +354,11 @@ class BloodType:
         if show_off_score:
             print("year {:.1f}".format(self.min_off_score[1])
                   + ", off_score {:.2f}".format(self.min_off_score[0])
-                  + ", btrf distribution {}".format(self.min_off_score[2])
-                  )
+                  + ", btrf distribution {}".format(self.min_off_score[2]))
+        self.log("#{}#: ".format(self.time)
+                 + "year {:.1f}".format(self.min_off_score[1])
+                 + ", off_score {:.2f}".format(self.min_off_score[0])
+                 + ", btrf distribution {}\n".format(self.min_off_score[2]))
         if print_state:
             self.print_state()
 
@@ -825,4 +828,8 @@ class BloodType:
             plt.show()
 
     def print_state(self):
-        print("step: {:3.2f}".format(self.states[-1][0]), self.states[-1][1:])
+        s = "#{}#: ".format(self.time) \
+            + "step: {:3.2f}".format(self.states[-1][0]) \
+            + "\t{}\n".format(self.states[-1][1:])
+        print(s)
+        self.log(s)
