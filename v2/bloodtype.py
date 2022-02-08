@@ -28,8 +28,8 @@ df_cols = ['age',
 
 
 SCALER = 1.4  # birth/death scaler prevents stagnation in evolution
-DEATH_RATE = 0.0094 * SCALER
-BIRTH_RATE = 0.0096 * SCALER
+DEATH_RATE = 0.0094*SCALER
+BIRTH_RATE = 0.0096*SCALER
 
 btrf_austria = {
     "A+":  0.37,
